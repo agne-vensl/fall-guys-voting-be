@@ -1,10 +1,14 @@
 const express = require("express");
 const mysql = require("mysql2/promise");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const router = express.Router();
 
-const { mysqlConfig } = require("../../config");
-const { isRegisterDataCorrect } = require("../../middleware");
+const { mysqlConfig, jwtSecret } = require("../../config");
+const {
+  isRegisterDataCorrect,
+  isLoginDataCorrect,
+} = require("../../middleware");
 
 router.post("/register", isRegisterDataCorrect, async (req, res) => {
   try {
@@ -36,6 +40,46 @@ router.post("/register", isRegisterDataCorrect, async (req, res) => {
     }
 
     res.send({ message: "Account successfully registered" });
+  } catch (err) {
+    console.log(err);
+    res
+      .status(500)
+      .send({ error: "Error in database. Please contact an admin" });
+  }
+});
+
+router.post("/login", isLoginDataCorrect, async (req, res) => {
+  try {
+    const con = await mysql.createConnection(mysqlConfig);
+    const [data] = await con.execute(
+      `SELECT id, email, password FROM users WHERE email = ${mysql.escape(
+        req.userData.email
+      )}`
+    );
+    con.end();
+
+    if (data.length !== 1) {
+      return res.status(400).send({ error: "Incorrect email or password" });
+    }
+
+    const passwordIsValid = bcrypt.compareSync(
+      req.userData.password,
+      data[0].password
+    );
+
+    if (!passwordIsValid) {
+      return res.status(400).send({ error: "Incorrect email or password" });
+    }
+
+    const token = jwt.sign(
+      {
+        id: data[0].id,
+        email: data[0].email,
+      },
+      jwtSecret
+    );
+
+    return res.send({ message: "Successfully logged in", token });
   } catch (err) {
     console.log(err);
     res
