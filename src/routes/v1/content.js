@@ -16,8 +16,8 @@ router.post("/all-skins", loggedIn, async (req, res) => {
     const con = await mysql.createConnection(mysqlConfig);
     const [data] = await con.execute(
       `SELECT skins.id, rarities.title as rarity, season, name, image, 
-      (SELECT COALESCE(SUM(score), 0) FROM scores WHERE skins.id = skin_id) as score, 
-      (SELECT COUNT(id) FROM scores WHERE skins.id = skin_id AND user_id = ${req.userData.id}) as voted 
+      (SELECT COALESCE(CAST(SUM(score) AS SIGNED), 0) FROM scores WHERE skins.id = skin_id) AS score, 
+      (SELECT COUNT(id) FROM scores WHERE skins.id = skin_id AND user_id = ${req.userData.id}) AS voted 
       FROM skins 
       JOIN rarities ON rarity_id = rarities.id 
       JOIN seasons ON season_id = seasons.id 
