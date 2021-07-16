@@ -48,7 +48,7 @@ router.post("/add-score", loggedIn, async (req, res) => {
     return res.status(400).send({ error: "Incorrect data" });
   }
 
-  if (req.scoreData.score < -1 || req.scoreData.score > 1) {
+  if (req.scoreData.score !== -1 && req.scoreData.score !== 1) {
     return res.status(400).send({ error: "Incorrect data" });
   }
 
