@@ -76,7 +76,8 @@ router.post("/login", isLoginDataCorrect, async (req, res) => {
         id: data[0].id,
         email: data[0].email,
       },
-      jwtSecret
+      jwtSecret,
+      { expiresIn: 60 * 60 }
     );
 
     return res.send({ message: "Successfully logged in", token });
